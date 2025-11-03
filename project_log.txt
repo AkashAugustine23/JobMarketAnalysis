@@ -1,0 +1,21 @@
+2025-10-25 16:34:09,761 - INFO - === Starting ETL: transform_data.py ===
+2025-10-25 16:34:09,762 - INFO - Loading dataset from data\raw\job_data_final.xlsx
+2025-10-25 16:34:11,172 - INFO - Columns standardized: ['job id', 'agency', 'posting type', '# of positions', 'job_title', 'civil service title', 'title classification', 'title code no', 'level', 'job category', 'full-time/part-time indicator', 'career level', 'salary range from', 'salary range to', 'salary frequency', 'work_location', 'division/work unit', 'job description', 'minimum qual requirements', 'preferred skills', 'additional information', 'to apply', 'residency requirement', 'posting_date', 'posting updated', 'process date', 'salary_annual']
+2025-10-25 16:34:11,173 - INFO - Initial shape: (5293, 27)
+2025-10-25 16:34:11,175 - INFO - After dropping nulls: (5293, 27)
+2025-10-25 16:34:11,193 - INFO - Aggregated data shape: (1393, 5)
+2025-10-25 16:34:11,193 - INFO - Monthly grouping complete.
+2025-10-25 16:34:11,193 - ERROR - ETL failed: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-10-25 16:34:56,350 - INFO - === Starting ETL: transform_data.py ===
+2025-10-25 16:34:56,351 - INFO - Loading dataset from data\raw\job_data_final.xlsx
+2025-10-25 16:34:57,682 - INFO - Columns standardized: ['job id', 'agency', 'posting type', '# of positions', 'job_title', 'civil service title', 'title classification', 'title code no', 'level', 'job category', 'full-time/part-time indicator', 'career level', 'salary range from', 'salary range to', 'salary frequency', 'work_location', 'division/work unit', 'job description', 'minimum qual requirements', 'preferred skills', 'additional information', 'to apply', 'residency requirement', 'posting_date', 'posting updated', 'process date', 'salary_annual']
+2025-10-25 16:34:57,682 - INFO - Initial shape: (5293, 27)
+2025-10-25 16:34:57,685 - INFO - After dropping nulls: (5293, 27)
+2025-10-25 16:34:57,699 - INFO - Aggregated data shape: (1393, 5)
+2025-10-25 16:34:57,699 - INFO - Monthly grouping complete.
+2025-10-25 16:34:58,014 - INFO - Processed data saved to data\processed\monthly_aggregates.parquet
+2025-10-25 16:34:58,014 - INFO - === ETL completed successfully ===

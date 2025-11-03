@@ -1,0 +1,29 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Logs
+LOG/
+
+# Data (keep heavy stuff out of Git)
+data/raw/
+data/processed/*.parquet
+data/processed/plots/*.png
+data/processed/plots/*.csv
+data/processed/plots/*.json
+
+# Env
+.env
+*.env
+
+# VS Code
+.vscode/
+
+# Frontend (when added)
+frontend/node_modules/
+frontend/dist/
+
+# OS junk
+.DS_Store
+Thumbs.db
