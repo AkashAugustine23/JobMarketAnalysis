@@ -15,7 +15,7 @@ print(f"Loading data from: {DATA_PATH}")
 df = pd.read_parquet(DATA_PATH)
 
 # choose a job title to model (is changeable)
-job_title = "Assistant Project Manage"
+job_title = "Assistant Project Manager"
 
 # filter data for that job title
 data = df[df["job_title"].str.lower() == job_title.lower()].copy()
