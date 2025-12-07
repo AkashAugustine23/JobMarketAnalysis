@@ -1,41 +1,74 @@
 import pandas as pd
 from pathlib import Path
+import json
 
-summary_path = Path("data/processed/plots/model_comparison_summary.csv")
-out_csv = Path("data/processed/plots/model_winners.csv")
-out_json = Path("data/processed/plots/model_winners.json")
+# paths
+SUMMARY_PATH = Path("data/processed/plots/model_comparison_summary.csv")
+OUT_CSV = Path("data/processed/plots/model_winners.csv")
+OUT_JSON = Path("data/processed/plots/model_winners.json")
 
-df = pd.read_csv(summary_path)
+# load summary from compare_many.py
+df = pd.read_csv(SUMMARY_PATH)
 
-# melt to long for easy argmin by MAPE (fallback to RMSE if MAPE is NaN)
 rows = []
+
 for _, r in df.iterrows():
-    cand = []
-    if pd.notna(r.get("mape_linear")):
-        cand.append(("Linear", r["mape_linear"], r["rmse_linear"]))
-    if pd.notna(r.get("mape_poly")):
-        cand.append(("Polynomial d2", r["mape_poly"], r["rmse_poly"]))
-    if pd.notna(r.get("mape_prophet")):
-        cand.append(("Prophet", r["mape_prophet"], r["rmse_prophet"]))
-    # choose by lowest MAPE; if tied/NaN, use RMSE
-    cand = [c for c in cand if pd.notna(c[1])]
-    if not cand:
-        cand = [c for c in cand if pd.notna(c[2])]
-        best = min(cand, key=lambda x: x[2]) if cand else ("N/A", None, None)
+    job_title = r["job_title"]
+
+    # collect candidate models with their MAPE and RMSE
+    candidates = []
+
+    # linear
+    if pd.notna(r.get("lin_mape")):
+        candidates.append(("Linear", r["lin_mape"], r["lin_rmse"]))
+
+    # polynomial (deg 2)
+    if pd.notna(r.get("poly_mape")):
+        candidates.append(("Polynomial d2", r["poly_mape"], r["poly_rmse"]))
+
+    # prophet
+    if pd.notna(r.get("prophet_mape")):
+        candidates.append(("Prophet", r["prophet_mape"], r["prophet_rmse"]))
+
+    # pick best model
+    best_model = "N/A"
+    best_mape = None
+    best_rmse = None
+
+    # filter out rows with NaN MAPE
+    valid_by_mape = [c for c in candidates if pd.notna(c[1])]
+
+    if valid_by_mape:
+        # choose the one with lowest MAPE
+        best = min(valid_by_mape, key=lambda x: x[1])
+        best_model, best_mape, best_rmse = best
     else:
-        best = min(cand, key=lambda x: x[1])
+        # if all MAPE are NaN, fall back to lowest RMSE (if available)
+        valid_by_rmse = [c for c in candidates if pd.notna(c[2])]
+        if valid_by_rmse:
+            best = min(valid_by_rmse, key=lambda x: x[2])
+            best_model, best_mape, best_rmse = best
+
     rows.append({
-        "job_title": r["job_title"],
-        "best_model": best[0],
-        "best_mape": best[1],
-        "best_rmse": best[2]
+        "job_title": job_title,
+        "best_model": best_model,
+        "best_mape": best_mape,
+        "best_rmse": best_rmse
     })
 
-winners = pd.DataFrame(rows).sort_values(["best_model","best_mape"], na_position="last")
-winners.to_csv(out_csv, index=False)
-winners.to_json(out_json, orient="records", indent=2)
+# create dataframe of winners
+winners = pd.DataFrame(rows).sort_values(
+    ["best_model", "best_mape"], na_position="last"
+)
 
-print("Saved:", out_csv)
-print("Saved:", out_json)
+# save CSV
+winners.to_csv(OUT_CSV, index=False)
+print("Saved:", OUT_CSV)
+
+# save JSON
+with open(OUT_JSON, "w") as f:
+    json.dump(rows, f, indent=2, default=float)
+print("Saved:", OUT_JSON)
+
 print("\nWinners preview:")
 print(winners.head(10).to_string(index=False))
