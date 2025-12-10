@@ -79,15 +79,6 @@ for job_title in titles:
     rmse_lin = rmse(y_te, y_pred_lin)
     mape_lin = mape(y_te, y_pred_lin)
 
-    # ---------------- Polynomial (deg 2) ----------------
-    poly = PolynomialFeatures(degree=2, include_bias=False)
-    Xtr_poly = poly.fit_transform(X_tr)
-    Xte_poly = poly.transform(X_te)
-    poly_model = LinearRegression().fit(Xtr_poly, y_tr)
-    y_pred_poly = poly_model.predict(Xte_poly)
-    rmse_poly = rmse(y_te, y_pred_poly)
-    mape_poly = mape(y_te, y_pred_poly)
-
     # ---------------- Prophet ----------------
     rmse_prophet = None
     mape_prophet = None
@@ -121,7 +112,6 @@ for job_title in titles:
     records.append({
         "job_title": job_title,
         "lin_rmse": rmse_lin, "lin_mape": mape_lin,
-        "poly_rmse": rmse_poly, "poly_mape": mape_poly,
         "prophet_rmse": rmse_prophet, "prophet_mape": mape_prophet
     })
 

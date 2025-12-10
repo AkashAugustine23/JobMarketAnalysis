@@ -22,10 +22,6 @@ for _, r in df.iterrows():
     if pd.notna(r.get("lin_mape")):
         candidates.append(("Linear", r["lin_mape"], r["lin_rmse"]))
 
-    # polynomial (deg 2)
-    if pd.notna(r.get("poly_mape")):
-        candidates.append(("Polynomial d2", r["poly_mape"], r["poly_rmse"]))
-
     # prophet
     if pd.notna(r.get("prophet_mape")):
         candidates.append(("Prophet", r["prophet_mape"], r["prophet_rmse"]))

@@ -60,16 +60,6 @@ y_pred_lin = lin.predict(X_te)
 rmse_lin = rmse(y_te, y_pred_lin)
 mape_lin = mape(y_te, y_pred_lin)
 
-# --- Polynomial ---
-poly = PolynomialFeatures(degree=degree, include_bias=False)
-Xtr_poly = poly.fit_transform(X_tr)
-Xte_poly = poly.transform(X_te)
-poly_model = LinearRegression().fit(Xtr_poly, y_tr)
-y_fit_poly = poly_model.predict(poly.transform(X_all))
-y_pred_poly = poly_model.predict(Xte_poly)
-rmse_poly = rmse(y_te, y_pred_poly)
-mape_poly = mape(y_te, y_pred_poly)
-
 # --- Prophet (same monthly series) ---
 rmse_prophet = None
 mape_prophet = None
@@ -101,7 +91,6 @@ print("\nModel Comparison (aligned monthly series)")
 print("----------------------------------------")
 print(f"Job Title: {job_title}")
 print(f"Linear         -> RMSE: {rmse_lin:.2f}, MAPE: {mape_lin:.2f}%")
-print(f"Polynomial d{degree} -> RMSE: {rmse_poly:.2f}, MAPE: {mape_poly:.2f}%")
 if rmse_prophet is not None and mape_prophet is not None:
     print(f"Prophet        -> RMSE: {rmse_prophet:.2f}, MAPE: {mape_prophet:.2f}%")
 else:
@@ -111,7 +100,6 @@ else:
 plt.figure(figsize=(11,6))
 plt.plot(months, y_all, label="Actual", marker="o", color="black")
 plt.plot(months, y_fit_lin, label="Linear", linestyle="--", color="blue")
-plt.plot(months, y_fit_poly, label=f"Poly (deg {degree})", linestyle="--", color="orange")
 if y_fit_prophet is not None:
     plt.plot(months, y_fit_prophet, label="Prophet", linestyle="--", color="green")
 
@@ -133,7 +121,6 @@ with open(metrics_path, "w", newline="") as f:
     w = csv.writer(f)
     w.writerow(["Model","RMSE","MAPE"])
     w.writerow(["Linear", f"{rmse_lin:.2f}", f"{mape_lin:.2f}%"])
-    w.writerow([f"Polynomial d{degree}", f"{rmse_poly:.2f}", f"{mape_poly:.2f}%"])
     if rmse_prophet is not None:
         w.writerow(["Prophet", f"{rmse_prophet:.2f}", f"{mape_prophet:.2f}%"])
 print(f"Saved metrics: {metrics_path}")
