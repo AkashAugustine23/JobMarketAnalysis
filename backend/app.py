@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import os
+from flask_cors import CORS
 
 from sklearn.linear_model import LinearRegression
 
@@ -16,9 +17,11 @@ except Exception:
         Prophet = None
 
 app = Flask(__name__)
+CORS(app)
 
 DATA_PATH = Path("data/processed/monthly_aggregates.parquet")
 WINNERS_PATH = Path("data/processed/plots/model_winners.json")
+KPI_DIR = Path("data/processed/kpis")
 
 df_global = pd.read_parquet(DATA_PATH)
 winners_df = pd.read_json(WINNERS_PATH)
@@ -166,6 +169,63 @@ def get_forecast():
 
     else:
         return jsonify({"error": f"Unsupported model or Prophet not available: {best_model}"}), 500
+    
+def _read_kpi_csv(filename: str):
+    path = KPI_DIR / filename
+    if not path.exists():
+        return None, f"Missing KPI file: {path.as_posix()}. Run python backend/etl/kpi_generate.py"
+    df_kpi = pd.read_csv(path)
+    return df_kpi.to_dict(orient="records"), None
+
+
+@app.route("/api/kpis", methods=["GET"])
+def get_all_kpis():
+    # returns everything in one call (easy for dashboard)
+    if not KPI_DIR.exists():
+        return jsonify({"error": f"Missing KPI folder: {KPI_DIR.as_posix()}"}), 500
+
+    kpi_map = {
+        "top_jobs_openings": "top_jobs_openings.csv",
+        "top_jobs_salary": "top_jobs_salary.csv",
+        "salary_growth_top10": "salary_growth_top10.csv",
+        "salary_spikes_top10": "salary_spikes_top10.csv",
+        "salary_volatility_top10": "salary_volatility_top10.csv",
+        "top_locations_salary": "top_locations_salary.csv",
+    }
+
+    out = {}
+    for key, fname in kpi_map.items():
+        data, err = _read_kpi_csv(fname)
+        if err:
+            return jsonify({"error": err}), 500
+        out[key] = data
+
+    return jsonify(out)
+
+
+@app.route("/api/kpis/<name>", methods=["GET"])
+def get_one_kpi(name):
+    # fetch one KPI list by name
+    kpi_map = {
+        "top_jobs_openings": "top_jobs_openings.csv",
+        "top_jobs_salary": "top_jobs_salary.csv",
+        "salary_growth_top10": "salary_growth_top10.csv",
+        "salary_spikes_top10": "salary_spikes_top10.csv",
+        "salary_volatility_top10": "salary_volatility_top10.csv",
+        "top_locations_salary": "top_locations_salary.csv",
+    }
+
+    if name not in kpi_map:
+        return jsonify({
+            "error": f"Unknown KPI: {name}",
+            "available": sorted(list(kpi_map.keys()))
+        }), 404
+
+    data, err = _read_kpi_csv(kpi_map[name])
+    if err:
+        return jsonify({"error": err}), 500
+
+    return jsonify({"name": name, "data": data})
 
 
 if __name__ == "__main__":
