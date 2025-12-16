@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from pathlib import Path
 import pandas as pd
 import numpy as np
+import os
 
 from sklearn.linear_model import LinearRegression
 
