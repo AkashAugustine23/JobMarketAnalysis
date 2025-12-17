@@ -27,13 +27,15 @@ html, body, #root {
 /* Sidebar */
 .sidebar {
   padding: 18px;
-  border-right: 1px solid rgba(17, 24, 39, 0.08);
-  background: rgba(255,255,255,0.65);
-  backdrop-filter: blur(10px);
+  border-right: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(17, 24, 39, 0.55);
+  backdrop-filter: blur(12px);
   position: sticky;
   top: 0;
   height: 100vh;
+  color: #e5e7eb;
 }
+
 
 .brand {
   display: flex;
@@ -49,21 +51,30 @@ html, body, #root {
   display: grid;
   place-items: center;
   font-weight: 900;
-  background: rgba(79,70,229,0.14);
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.10);
 }
 
 .brandTitle { font-weight: 900; }
 .brandSub { font-size: 12px; opacity: 0.7; margin-top: 2; }
 
 .nav { display: grid; gap: 10px; margin-top: 12px; }
+
 .navItem {
   padding: 10px 12px;
   border-radius: 12px;
-  font-weight: 700;
-  opacity: 0.75;
+  font-weight: 800;
+  opacity: 0.85;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #e5e7eb;
+  text-align: left;
+  cursor: pointer;
 }
+
 .navItemActive {
-  background: rgba(79,70,229,0.12);
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   opacity: 1;
 }
 
@@ -88,11 +99,12 @@ html, body, #root {
   flex-wrap: wrap;
   align-items: center;
   padding: 14px 16px;
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 16px;
-  background: rgba(255,255,255,0.78);
+  background: rgba(17, 24, 39, 0.65);
   backdrop-filter: blur(10px);
 }
+
 
 .pageTitle { font-size: 16px; font-weight: 900; }
 .pageSub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
@@ -155,9 +167,10 @@ html, body, #root {
 .statCard {
   padding: 14px 14px;
   border-radius: 16px;
-  border: 1px solid rgba(17, 24, 39, 0.08);
-  background: rgba(255,255,255,0.80);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(17, 24, 39, 0.65);
   backdrop-filter: blur(10px);
+  color: #e5e7eb;
 }
 
 .statLabel { font-size: 12px; opacity: 0.75; font-weight: 800; }
@@ -175,11 +188,13 @@ html, body, #root {
 .panel {
   grid-column: span 6;
   border-radius: 18px;
-  border: 1px solid rgba(17, 24, 39, 0.08);
-  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(17, 24, 39, 0.70);
   backdrop-filter: blur(10px);
   padding: 16px;
+  color: #e5e7eb;
 }
+
 
 .panel:nth-child(4) {
   grid-column: span 12;
@@ -221,4 +236,13 @@ html, body, #root {
   .statsRow { grid-template-columns: 1fr; }
   .control { min-width: 100%; }
   .topbarRight { width: 100%; }
+}
+
+.pill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.10);
+  font-weight: 800;
+  font-size: 12px;
 }
