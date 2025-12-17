@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import "./App.css";
+
 import {
   ResponsiveContainer,
   LineChart,
@@ -13,65 +15,62 @@ import {
 
 const API = "http://127.0.0.1:5000";
 
-function kFormat(n) {
-  const x = Number(n);
-  if (Number.isNaN(x)) return n;
-  if (Math.abs(x) >= 1_000_000) return `${(x / 1_000_000).toFixed(1)}M`;
-  if (Math.abs(x) >= 1_000) return `${(x / 1_000).toFixed(1)}k`;
-  return `${Math.round(x)}`;
+function fmtMoney(v) {
+  const n = Number(v);
+  if (Number.isNaN(n)) return v;
+  return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+function fmtCompact(v) {
+  const n = Number(v);
+  if (Number.isNaN(n)) return v;
+  if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (Math.abs(n) >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+  return `${Math.round(n)}`;
+}
+function truncateLabel(s, max = 22) {
+  const str = String(s ?? "");
+  return str.length > max ? str.slice(0, max) + "…" : str;
 }
 
-function Card({ title, subtitle, right, children }) {
+function StatCard({ label, value, sub }) {
   return (
-    <div
-      style={{
-        background: "rgba(255,255,255,0.78)",
-        border: "1px solid rgba(255,255,255,0.55)",
-        borderRadius: 18,
-        padding: 18,
-        boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-        backdropFilter: "blur(10px)",
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 700 }}>{title}</div>
-          {subtitle && (
-            <div style={{ fontSize: 12, opacity: 0.75, marginTop: 2 }}>{subtitle}</div>
-          )}
-        </div>
-        {right}
-      </div>
-      <div style={{ marginTop: 12 }}>{children}</div>
+    <div className="statCard">
+      <div className="statLabel">{label}</div>
+      <div className="statValue">{value}</div>
+      {sub ? <div className="statSub">{sub}</div> : null}
     </div>
   );
 }
 
-function StatPill({ label, value }) {
+function Panel({ title, subtitle, children, right }) {
   return (
-    <div
-      style={{
-        padding: "10px 12px",
-        borderRadius: 14,
-        background: "rgba(255,255,255,0.65)",
-        border: "1px solid rgba(255,255,255,0.5)",
-        minWidth: 150,
-      }}
-    >
-      <div style={{ fontSize: 12, opacity: 0.7 }}>{label}</div>
-      <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4 }}>{value}</div>
+    <div className="panel">
+      <div className="panelHeader">
+        <div>
+          <div className="panelTitle">{title}</div>
+          {subtitle ? <div className="panelSub">{subtitle}</div> : null}
+        </div>
+        {right ? <div className="panelRight">{right}</div> : null}
+      </div>
+      <div className="panelBody">{children}</div>
     </div>
   );
 }
 
 export default function App() {
+  // Page routing (simple state router)
+  const [page, setPage] = useState("kpis"); // default KPIs
+
+  // Data
   const [titles, setTitles] = useState([]);
   const [selectedTitle, setSelectedTitle] = useState("");
+  const [kpis, setKpis] = useState(null);
+
   const [history, setHistory] = useState([]);
   const [forecast, setForecast] = useState([]);
   const [forecastModel, setForecastModel] = useState("");
   const [horizon, setHorizon] = useState(6);
-  const [kpis, setKpis] = useState(null);
+
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -87,15 +86,14 @@ export default function App() {
         const kData = await kRes.json();
         setKpis(kData);
       } catch {
-        setError("Failed to load initial data (titles/KPIs). Make sure Flask is running.");
+        setError("Failed to load titles/KPIs. Check Flask is running on 127.0.0.1:5000");
       }
     })();
   }, []);
 
   const loadHistory = async () => {
+    if (!selectedTitle) return;
     setError("");
-    setForecast([]);
-    setForecastModel("");
     try {
       const r = await fetch(`${API}/api/history?title=${encodeURIComponent(selectedTitle)}`);
       const d = await r.json();
@@ -107,8 +105,8 @@ export default function App() {
   };
 
   const loadForecast = async () => {
+    if (!selectedTitle) return;
     setError("");
-    setHistory([]);
     try {
       const r = await fetch(
         `${API}/api/forecast?title=${encodeURIComponent(selectedTitle)}&horizon=${horizon}`
@@ -122,311 +120,233 @@ export default function App() {
     }
   };
 
-  const topOpenings = useMemo(
-    () => (kpis?.top_jobs_openings || []).slice(0, 7).map(r => ({ ...r, job_title: String(r.job_title) })),
-    [kpis]
-  );
-  const topSalary = useMemo(
-    () => (kpis?.top_jobs_salary || []).slice(0, 7).map(r => ({ ...r, job_title: String(r.job_title) })),
-    [kpis]
-  );
-  const growthLeaders = useMemo(
-    () => (kpis?.salary_growth_top10 || []).slice(0, 7).map(r => ({ ...r, job_title: String(r.job_title) })),
-    [kpis]
-  );
+  // KPIs
+  const topOpenings = useMemo(() => (kpis?.top_jobs_openings || []).slice(0, 8), [kpis]);
+  const topSalary = useMemo(() => (kpis?.top_jobs_salary || []).slice(0, 8), [kpis]);
+  const growthLeaders = useMemo(() => (kpis?.salary_growth_top10 || []).slice(0, 8), [kpis]);
 
+  // Stats (for predict page)
   const historyStats = useMemo(() => {
     if (!history.length) return null;
     const vals = history.map(r => Number(r.avg_salary)).filter(v => !Number.isNaN(v));
     if (!vals.length) return null;
-    const min = Math.min(...vals);
-    const max = Math.max(...vals);
-    const last = vals[vals.length - 1];
-    return { min, max, last };
+    return { last: vals[vals.length - 1], min: Math.min(...vals), max: Math.max(...vals) };
   }, [history]);
 
   const forecastStats = useMemo(() => {
     if (!forecast.length) return null;
     const vals = forecast.map(r => Number(r.predicted_salary)).filter(v => !Number.isNaN(v));
     if (!vals.length) return null;
-    const min = Math.min(...vals);
-    const max = Math.max(...vals);
-    const last = vals[vals.length - 1];
-    return { min, max, last };
+    return { last: vals[vals.length - 1], min: Math.min(...vals), max: Math.max(...vals) };
   }, [forecast]);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background:
-          "radial-gradient(1200px 700px at 20% 10%, rgba(164, 165, 255, 0.55), transparent 60%)," +
-          "radial-gradient(1200px 700px at 80% 20%, rgba(255, 170, 220, 0.55), transparent 60%)," +
-          "linear-gradient(180deg, #f6f7ff 0%, #f6f7fb 40%, #f7f8fb 100%)",
-      }}
-    >
-      {/* Top Bar */}
-      <div
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          padding: "16px 18px",
-          borderBottom: "1px solid rgba(0,0,0,0.06)",
-          backdropFilter: "blur(10px)",
-          background: "rgba(255,255,255,0.65)",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1400,
-            width: "100%",
-            margin: "0 auto",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 16,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 12,
-                background: "rgba(79,70,229,0.15)",
-                display: "grid",
-                placeItems: "center",
-                fontWeight: 900,
-              }}
-            >
-              JM
-            </div>
-            <div>
-              <div style={{ fontSize: 16, fontWeight: 900 }}>Job Market Dashboard</div>
-              <div style={{ fontSize: 12, opacity: 0.7 }}>
-                KPIs + Salary Forecast (Prophet/Linear)
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            <select
-              value={selectedTitle}
-              onChange={(e) => setSelectedTitle(e.target.value)}
-              style={{
-                padding: "10px 12px",
-                borderRadius: 12,
-                border: "1px solid rgba(0,0,0,0.12)",
-                background: "white",
-                minWidth: 260,
-                fontWeight: 600,
-              }}
-            >
-              {titles.map((t, i) => (
-                <option key={i} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={horizon}
-              onChange={(e) => setHorizon(Number(e.target.value))}
-              style={{
-                padding: "10px 12px",
-                borderRadius: 12,
-                border: "1px solid rgba(0,0,0,0.12)",
-                background: "white",
-                fontWeight: 700,
-              }}
-            >
-              <option value={3}>3 mo</option>
-              <option value={6}>6 mo</option>
-              <option value={12}>12 mo</option>
-            </select>
-
-            <button
-              onClick={loadHistory}
-              style={{
-                padding: "10px 14px",
-                borderRadius: 12,
-                border: "1px solid rgba(0,0,0,0.12)",
-                background: "white",
-                fontWeight: 800,
-                cursor: "pointer",
-              }}
-            >
-              Load History
-            </button>
-
-            <button
-              onClick={loadForecast}
-              style={{
-                padding: "10px 14px",
-                borderRadius: 12,
-                border: "0",
-                background: "rgba(79,70,229,0.92)",
-                color: "white",
-                fontWeight: 900,
-                cursor: "pointer",
-              }}
-            >
-              Predict
-            </button>
+    <div className="appShell">
+      {/* Sidebar */}
+      <aside className="sidebar">
+        <div className="brand">
+          <div className="brandIcon">JM</div>
+          <div>
+            <div className="brandTitle">Job Market</div>
+            <div className="brandSub">Analytics Dashboard</div>
           </div>
         </div>
-      </div>
 
-      {/* Main Container */}
-      <div style={{ padding: "22px 18px" }}>
-        <div style={{ maxWidth: 1400, width:"100%", margin: "0 auto" }}>
-          {error && (
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 14,
-                background: "rgba(220,38,38,0.10)",
-                border: "1px solid rgba(220,38,38,0.25)",
-                color: "#b91c1c",
-                fontWeight: 700,
-                marginBottom: 16,
-              }}
-            >
-              {error}
+        <nav className="nav">
+          <button
+            className={`navItem ${page === "kpis" ? "navItemActive" : ""}`}
+            onClick={() => setPage("kpis")}
+            type="button"
+          >
+            KPIs
+          </button>
+
+          <button
+            className={`navItem ${page === "predict" ? "navItemActive" : ""}`}
+            onClick={() => setPage("predict")}
+            type="button"
+          >
+            Predict
+          </button>
+        </nav>
+
+        <div className="sidebarFooter">
+          <div className="hint">
+            KPIs shows market summary. Predict gives history + forecast for a selected job.
+          </div>
+        </div>
+      </aside>
+
+      {/* Main */}
+      <main className="main">
+        {/* Top bar (changes per page) */}
+        <div className="topbar">
+          <div className="topbarLeft">
+            <div className="pageTitle">{page === "kpis" ? "KPIs" : "Predict"}</div>
+            <div className="pageSub">
+              {page === "kpis"
+                ? "Openings, salary leaders, and salary growth insights"
+                : "Select job title + horizon, then load history / forecast"}
             </div>
-          )}
-
-          {/* KPI Row */}
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
-            <StatPill
-              label="Current selected title"
-              value={selectedTitle ? selectedTitle.slice(0, 20) + (selectedTitle.length > 20 ? "…" : "") : "—"}
-            />
-            <StatPill
-              label="History (last avg)"
-              value={historyStats ? `€${kFormat(historyStats.last)}` : "—"}
-            />
-            <StatPill
-              label="Forecast (last predicted)"
-              value={forecastStats ? `€${kFormat(forecastStats.last)}` : "—"}
-            />
-            <StatPill
-              label="Forecast model"
-              value={forecastModel || "—"}
-            />
           </div>
 
-          {/* Grid */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(12, 1fr)",
-              gap: 16,
-            }}
-          >
-            {/* KPIs charts */}
-            <div style={{ gridColumn: "span 6" }}>
-              <Card title="Top Jobs by Openings" subtitle="Total postings across months">
-                <div style={{ width: "100%", height: 300 }}>
-                  <ResponsiveContainer>
-                    <BarChart data={topOpenings} layout="vertical" margin={{ left: 20, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" tickFormatter={kFormat} />
-                      <YAxis
-                        type="category"
-                        dataKey="job_title"
-                        width={160}
-                        tick={{ fontSize: 12 }}
-                      />
-                      <Tooltip />
-                      <Bar dataKey="job_count" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
-            </div>
+          {/* Controls only on Predict page */}
+          {page === "predict" ? (
+            <div className="topbarRight">
+              <select
+                className="control"
+                value={selectedTitle}
+                onChange={(e) => setSelectedTitle(e.target.value)}
+              >
+                {titles.map((t, i) => (
+                  <option key={i} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
 
-            <div style={{ gridColumn: "span 6" }}>
-              <Card title="Top Jobs by Salary" subtitle="Mean salary across months (avg_salary)">
-                <div style={{ width: "100%", height: 300 }}>
-                  <ResponsiveContainer>
-                    <BarChart data={topSalary} layout="vertical" margin={{ left: 20, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" tickFormatter={kFormat} />
-                      <YAxis
-                        type="category"
-                        dataKey="job_title"
-                        width={160}
-                        tick={{ fontSize: 12 }}
-                      />
-                      <Tooltip />
-                      <Bar dataKey="avg_salary" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
-            </div>
+              <select
+                className="control controlSmall"
+                value={horizon}
+                onChange={(e) => setHorizon(Number(e.target.value))}
+              >
+                <option value={3}>3 mo</option>
+                <option value={6}>6 mo</option>
+                <option value={12}>12 mo</option>
+              </select>
 
-            <div style={{ gridColumn: "span 5" }}>
-              <Card title="Salary Growth Leaders" subtitle="First vs last month % change">
-                <div style={{ width: "100%", height: 300 }}>
-                  <ResponsiveContainer>
-                    <BarChart data={growthLeaders} layout="vertical" margin={{ left: 20, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" tickFormatter={(v) => `${Number(v).toFixed(0)}%`} />
-                      <YAxis
-                        type="category"
-                        dataKey="job_title"
-                        width={150}
-                        tick={{ fontSize: 12 }}
-                      />
-                      <Tooltip formatter={(v) => [`${Number(v).toFixed(1)}%`, "Growth"]} />
-                      <Bar dataKey="growth_pct" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
+              <button className="btn" onClick={loadHistory}>Load History</button>
+              <button className="btn btnPrimary" onClick={loadForecast}>Predict</button>
             </div>
+          ) : (
+            <div className="topbarRight">
+              <div className="pill">Default view</div>
+            </div>
+          )}
+        </div>
 
-            {/* Trend chart */}
-            <div style={{ gridColumn: "span 7" }}>
-              <Card
+        {error ? <div className="alert">{error}</div> : null}
+
+        {/* PAGE: KPIs */}
+        {page === "kpis" && (
+          <section className="grid">
+            <Panel title="Top Jobs by Openings" subtitle="Most postings (aggregated monthly)">
+              <div className="chartWrap">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={topOpenings} layout="vertical" margin={{ left: 10, right: 18, top: 8, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" tickFormatter={fmtCompact} />
+                    <YAxis
+                      type="category"
+                      dataKey="job_title"
+                      width={190}
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(v) => truncateLabel(v, 24)}
+                    />
+                    <Tooltip />
+                    <Bar dataKey="job_count" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Panel>
+
+            <Panel title="Top Jobs by Salary" subtitle="Highest average salaries (monthly mean)">
+              <div className="chartWrap">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={topSalary} layout="vertical" margin={{ left: 10, right: 18, top: 8, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" tickFormatter={fmtCompact} />
+                    <YAxis
+                      type="category"
+                      dataKey="job_title"
+                      width={190}
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(v) => truncateLabel(v, 24)}
+                    />
+                    <Tooltip formatter={(v) => [`€${fmtMoney(v)}`, "Avg salary"]} />
+                    <Bar dataKey="avg_salary" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Panel>
+
+            <Panel title="Salary Growth Leaders" subtitle="Top % growth from first to last month">
+              <div className="chartWrap">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={growthLeaders} layout="vertical" margin={{ left: 10, right: 18, top: 8, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" tickFormatter={(v) => `${Number(v).toFixed(0)}%`} />
+                    <YAxis
+                      type="category"
+                      dataKey="job_title"
+                      width={190}
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(v) => truncateLabel(v, 24)}
+                    />
+                    <Tooltip formatter={(v) => [`${Number(v).toFixed(1)}%`, "Growth"]} />
+                    <Bar dataKey="growth_pct" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Panel>
+          </section>
+        )}
+
+        {/* PAGE: Predict */}
+        {page === "predict" && (
+          <>
+            <section className="statsRow">
+              <StatCard
+                label="Selected title"
+                value={selectedTitle ? truncateLabel(selectedTitle, 28) : "—"}
+                sub="Used for history + forecast"
+              />
+              <StatCard
+                label="History (last avg)"
+                value={historyStats ? `€${fmtCompact(historyStats.last)}` : "—"}
+                sub={historyStats ? `min €${fmtCompact(historyStats.min)} • max €${fmtCompact(historyStats.max)}` : ""}
+              />
+              <StatCard
+                label="Forecast (last predicted)"
+                value={forecastStats ? `€${fmtCompact(forecastStats.last)}` : "—"}
+                sub={forecastStats ? `min €${fmtCompact(forecastStats.min)} • max €${fmtCompact(forecastStats.max)}` : ""}
+              />
+              <StatCard
+                label="Forecast model"
+                value={forecastModel || "—"}
+                sub="Chosen dynamically per job"
+              />
+            </section>
+
+            <section className="grid">
+              <Panel
                 title="Salary Trend"
                 subtitle={
                   history.length
-                    ? "History: avg_salary by month"
+                    ? "History: avg_salary over time"
                     : forecast.length
-                    ? `Forecast: predicted_salary by month (${horizon} months)`
+                    ? `Forecast: predicted_salary (${horizon} months)`
                     : "Click Load History or Predict"
                 }
-                right={
-                  <div style={{ fontSize: 12, opacity: 0.75, textAlign: "right" }}>
-                    {forecastModel ? `Model: ${forecastModel}` : ""}
-                  </div>
-                }
+                right={forecastModel ? <span className="badge">{forecastModel}</span> : null}
               >
-                <div style={{ width: "100%", height: 320 }}>
-                  <ResponsiveContainer>
-                    <LineChart data={history.length ? history : forecast}>
+                <div className="chartWrapTall">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={history.length ? history : forecast} margin={{ left: 10, right: 18, top: 8, bottom: 8 }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                      <YAxis tickFormatter={kFormat} tick={{ fontSize: 12 }} />
-                      <Tooltip formatter={(v) => [`€${kFormat(v)}`, "Salary"]} />
+                      <YAxis tickFormatter={fmtCompact} tick={{ fontSize: 12 }} />
+                      <Tooltip formatter={(v) => [`€${fmtMoney(v)}`, "Salary"]} />
                       {history.length > 0 && <Line type="monotone" dataKey="avg_salary" strokeWidth={2} dot={false} />}
                       {forecast.length > 0 && <Line type="monotone" dataKey="predicted_salary" strokeWidth={2} dot={false} />}
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
-              </Card>
-            </div>
-          </div>
-
-          <div style={{ marginTop: 14, fontSize: 12, opacity: 0.7 }}>
-            Tip: Use the dropdown and horizon selector in the top bar. “Predict” calls the API with title + horizon.
-          </div>
-        </div>
-      </div>
+              </Panel>
+            </section>
+          </>
+        )}
+      </main>
     </div>
   );
 }

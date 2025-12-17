@@ -1,42 +1,224 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* Full-width fix: the real culprit is usually default Vite CSS */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+* { box-sizing: border-box; }
+
+.appShell {
+  min-height: 100%;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+
+  /* darker version */
+  background:
+    radial-gradient(1000px 600px at 20% 10%, rgba(120, 120, 255, 0.35), transparent 60%),
+    radial-gradient(1000px 600px at 80% 20%, rgba(255, 120, 190, 0.30), transparent 60%),
+    linear-gradient(180deg, #0b1020 0%, #0e1530 55%, #0b1226 100%);
+
+  color: #e5e7eb;
+  font-family: Inter, Arial, sans-serif;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+
+/* Sidebar */
+.sidebar {
+  padding: 18px;
+  border-right: 1px solid rgba(17, 24, 39, 0.08);
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  height: 100vh;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 18px;
 }
 
-.card {
-  padding: 2em;
+.brandIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  background: rgba(79,70,229,0.14);
 }
 
-.read-the-docs {
-  color: #888;
+.brandTitle { font-weight: 900; }
+.brandSub { font-size: 12px; opacity: 0.7; margin-top: 2; }
+
+.nav { display: grid; gap: 10px; margin-top: 12px; }
+.navItem {
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  opacity: 0.75;
+}
+.navItemActive {
+  background: rgba(79,70,229,0.12);
+  opacity: 1;
+}
+
+.sidebarFooter { margin-top: auto; padding-top: 14px; }
+.hint {
+  font-size: 12px;
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+/* Main */
+.main {
+  width: 100%;
+  padding: 18px 18px 28px;
+}
+
+.topbar {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 16px;
+  background: rgba(255,255,255,0.78);
+  backdrop-filter: blur(10px);
+}
+
+.pageTitle { font-size: 16px; font-weight: 900; }
+.pageSub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+
+.topbarRight {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.control {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  background: white;
+  color: #111827;
+  font-weight: 700;
+  min-width: 320px;
+}
+
+.controlSmall {
+  min-width: 90px;
+}
+
+.btn {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  background: white;
+  color: #111827;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btnPrimary {
+  border: none;
+  background: rgba(79,70,229,0.95);
+  color: white;
+}
+
+.alert {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(220,38,38,0.10);
+  border: 1px solid rgba(220,38,38,0.25);
+  color: #b91c1c;
+  font-weight: 800;
+}
+
+/* Stats row */
+.statsRow {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.statCard {
+  padding: 14px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: rgba(255,255,255,0.80);
+  backdrop-filter: blur(10px);
+}
+
+.statLabel { font-size: 12px; opacity: 0.75; font-weight: 800; }
+.statValue { font-size: 18px; font-weight: 900; margin-top: 6px; }
+.statSub { font-size: 12px; opacity: 0.7; margin-top: 6px; }
+
+/* Panels grid */
+.grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.panel {
+  grid-column: span 6;
+  border-radius: 18px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(10px);
+  padding: 16px;
+}
+
+.panel:nth-child(4) {
+  grid-column: span 12;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.panelTitle { font-weight: 900; }
+.panelSub { font-size: 12px; opacity: 0.7; margin-top: 4px; }
+
+.badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(79,70,229,0.12);
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.panelBody { margin-top: 10px; }
+
+.chartWrap { height: 320px; width: 100%; }
+.chartWrapTall { height: 380px; width: 100%; }
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .statsRow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .panel { grid-column: span 12; }
+  .control { min-width: 260px; }
+}
+
+@media (max-width: 860px) {
+  .appShell { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; }
+  .statsRow { grid-template-columns: 1fr; }
+  .control { min-width: 100%; }
+  .topbarRight { width: 100%; }
 }
