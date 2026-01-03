@@ -49,5 +49,5 @@ print("Columns:", grouped.columns.tolist())
 output_path = PROCESSED_DIR / "monthly_aggregates.parquet"
 grouped.to_parquet(output_path, index=False)
 
-print(f"\n✅ Processed data saved to: {output_path}")
+print(f"\n Processed data saved to: {output_path}")
 print("ETL process completed successfully.")

@@ -111,4 +111,4 @@ plt.tight_layout()
 out_path = PLOT_DIR / f"prophet_{job_title.replace(' ', '_')}.png"
 plt.savefig(out_path)
 plt.close()
-print(f"\n✅ Plot saved: {out_path}")
+print(f"\n Plot saved: {out_path}")

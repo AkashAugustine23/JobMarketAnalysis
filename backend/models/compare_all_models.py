@@ -113,7 +113,7 @@ plt.tight_layout()
 out_path = PLOT_DIR / f"compare_all_{job_title.replace(' ', '_')}.png"
 plt.savefig(out_path)
 plt.close()
-print(f"\n✅ Combined plot saved: {out_path}")
+print(f"\n Combined plot saved: {out_path}")
 
 import csv
 metrics_path = PLOT_DIR / f"metrics_{job_title.replace(' ', '_')}.csv"

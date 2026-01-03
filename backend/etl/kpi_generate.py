@@ -73,7 +73,7 @@ salary_spikes.to_csv(OUT_DIR / "salary_spikes_top10.csv", index=False)
 salary_volatility.to_csv(OUT_DIR / "salary_volatility_top10.csv", index=False)
 top_locations_salary.to_csv(OUT_DIR / "top_locations_salary.csv", index=False)
 
-print("✅ KPI files saved to:", OUT_DIR)
+print("KPI files saved to:", OUT_DIR)
 print("Files created:")
 for p in OUT_DIR.glob("*.csv"):
     print(" -", p.as_posix())

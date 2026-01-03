@@ -23,6 +23,6 @@ important_cols = ["salary per annum", "business title", "posting date", "work lo
 print("\n--- Checking for key columns ---")
 for col in important_cols:
     if any(col.lower() == c.lower() for c in df.columns):
-        print(f"✅ Found: {col}")
+        print(f"Found: {col}")
     else:
-        print(f"⚠️ Missing: {col}")
+        print(f"Missing: {col}")

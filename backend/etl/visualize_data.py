@@ -83,4 +83,4 @@ plt.savefig(PLOT_DIR / f"salary_trend_{selected_title.replace(' ', '_')}.png")
 plt.close()
 print(f"Saved: salary_trend_{selected_title.replace(' ', '_')}.png")
 
-print("\n✅ Visualization complete. All plots saved in data/processed/plots/")
+print("\n Visualization complete. All plots saved in data/processed/plots/")

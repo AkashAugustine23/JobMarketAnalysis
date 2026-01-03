@@ -65,6 +65,6 @@ output_file = MODEL_OUTPUT / f"linear_regression_{job_title.replace(' ', '_')}.p
 plt.savefig(output_file)
 plt.close()
 
-print(f"✅ Model complete. Saved plot: {output_file}")
+print(f"Model complete. Saved plot: {output_file}")
 print("\nPredicted salaries for next 6 months:")
 print(forecast_df)
